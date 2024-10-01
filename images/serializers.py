@@ -5,6 +5,7 @@ from .models import Image
 class ImageSerializer(serializers.ModelSerializer):
     user_liked = serializers.SerializerMethodField()
     user_favourited = serializers.SerializerMethodField()
+    uploaded_by = serializers.StringRelatedField(read_only=True)
 
     class Meta:
         model = Image
@@ -15,7 +16,7 @@ class ImageSerializer(serializers.ModelSerializer):
             'gps_latitude', 'gps_longitude', 'capture_time',
             'view_count', 'like_count', 'download_count',
             'privacy', 'exif', 'uploaded_at',
-            'user_liked', 'user_favourited' 
+            'user_liked', 'user_favourited', 'tags',
         ]
         read_only_fields = [
             "view_count",

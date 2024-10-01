@@ -7,7 +7,7 @@ import {
   Button,
   Box,
 } from '@mui/material';
-import { Logout, Home, Favorite, CloudUpload, PhotoLibrary } from '@mui/icons-material';
+import { Logout, Home, Favorite, CloudUpload, PhotoLibrary, Person } from '@mui/icons-material';
 import { useAppDispatch, useAppSelector } from '../store/hooks';
 import { logout } from '../store/authSlice';
 
@@ -68,6 +68,13 @@ const Navbar: React.FC = () => {
             onClick={() => navigate('/browse')}
           >
             Browse
+          </Button>
+          <Button
+            color="inherit"
+            startIcon={<Person />}
+            onClick={() => navigate('/profile')}
+          >
+            Profile
           </Button>
           <Button
             color="inherit"

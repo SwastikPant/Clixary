@@ -26,4 +26,11 @@ class CanModifyImage(permissions.BasePermission):
         is_owner = obj.uploaded_by == request.user
         is_admin = request.user.profile.role == 'ADMIN'
         
+        print(f" Image permission check:")
+        print(f"   User: {request.user.username}")
+        print(f"   Image owner: {obj.uploaded_by.username}")
+        print(f"   Is owner: {is_owner}")
+        print(f"   Is admin: {is_admin}")
+        print(f"   Allowed: {is_owner or is_admin}")
+
         return is_owner or is_admin

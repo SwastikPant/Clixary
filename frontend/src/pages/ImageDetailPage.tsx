@@ -22,10 +22,12 @@ import {
   Download,
   Visibility,
   CameraAlt,
+  Delete,
 } from '@mui/icons-material';
 import { imagesService } from '../services/images';
 import { Image } from '../types';
 import CommentsSection from '../components/CommentsSection'
+import { useAppSelector } from '../store/hooks';
 
 const ImageDetailPage: React.FC = () => {
   const { id } = useParams<{ id: string }>();
@@ -34,6 +36,33 @@ const ImageDetailPage: React.FC = () => {
   const [image, setImage] = useState<Image | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+
+  const { user } = useAppSelector((state) => state.auth);
+  const [deleting, setDeleting] = useState(false);
+
+  const isOwner = image && (
+    image.uploaded_by === user?.username || 
+    user?.role === 'ADMIN'
+  );
+
+  const handleDelete = async () => {
+    if (!image) return;
+    
+    if (!window.confirm('Are you sure you want to delete this photo? This cannot be undone.')) {
+      return;
+    }
+    
+    setDeleting(true);
+    try {
+      await imagesService.delete(image.id);
+      alert('Photo deleted successfully');
+      navigate(-1);
+    } catch (err: any) {
+      alert('Failed to delete photo');
+      setDeleting(false);
+    }
+  };
+
 
   useEffect(() => {
     if (id) {
@@ -80,18 +109,37 @@ const ImageDetailPage: React.FC = () => {
     }
   };
 
-  const handleDownload = () => {
+  const handleDownload = async () => {
     if (!image) return;
-    window.open(image.original_image, '_blank');
+    
+    try {
+      const token = localStorage.getItem('access_token');
+      const response = await fetch(
+        `http://localhost:8000/api/images/${image.id}/download/`,
+        {
+          method: 'GET',
+          headers: {
+            'Authorization': `Bearer ${token}`
+          },
+          redirect: 'follow'
+        }
+      );
+      if (response.ok) {
+        const blob = await response.blob();
+        const url = window.URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = `photo-${image.id}.jpg`;
+        document.body.appendChild(a);
+        a.click();
+        window.URL.revokeObjectURL(url);
+        document.body.removeChild(a);
+      }
+    } catch (err) {
+      console.error('Download failed:', err);
+      window.open(image.original_image, '_blank');
+    }
   };
-
-  if (loading) {
-    return (
-      <Box display="flex" justifyContent="center" alignItems="center" minHeight="80vh">
-        <CircularProgress />
-      </Box>
-    );
-  }
 
   if (error || !image) {
     return (
@@ -163,6 +211,18 @@ const ImageDetailPage: React.FC = () => {
             >
               Download
             </Button>
+
+            {isOwner && (
+              <Button
+                variant="outlined"
+                color="error"
+                startIcon={<Delete />}
+                onClick={handleDelete}
+                disabled={deleting}
+              >
+                {deleting ? 'Deleting...' : 'Delete Photo'}
+              </Button>
+            )}
           </Box>
         </Grid>
 

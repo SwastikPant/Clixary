@@ -24,7 +24,6 @@ class ImageViewSet(viewsets.ModelViewSet):
     ordering_fields = ['uploaded_at', 'like_count', 'view_count'] 
     ordering = ['uploaded_at']
 
-
     def get_queryset(self):
         queryset = super().get_queryset()
         user = self.request.user
@@ -48,6 +47,14 @@ class ImageViewSet(viewsets.ModelViewSet):
 
     def perform_create(self, serializer):
         serializer.save(uploaded_by=self.request.user)
+
+    def retrieve(self, request, *args, **kwargs):
+        from django.db.models import F
+        instance = self.get_object()
+        Image.objects.filter(pk=instance.pk).update(view_count=F('view_count') + 1)
+        instance.refresh_from_db()
+        serializer = self.get_serializer(instance)
+        return Response(serializer.data)
 
     @action(detail=True, methods=['post'], permission_classes=[IsAuthenticated])
     def like(self, request, pk=None):
@@ -204,3 +211,87 @@ class ImageViewSet(viewsets.ModelViewSet):
             'images': uploaded_images,
             'errors': errors
         }, status=status.HTTP_201_CREATED if uploaded_images else status.HTTP_400_BAD_REQUEST)
+
+    @action(detail=True, methods=['get'], permission_classes=[IsAuthenticated])
+    def download(self, request, pk=None):
+        image = self.get_object()
+    
+        image.download_count = F('download_count') + 1
+        image.save(update_fields=['download_count'])
+        
+        from django.shortcuts import redirect
+        return redirect(image.original_image.url)
+
+    @action(detail=True, methods=['post'], permission_classes=[IsAuthenticated])
+    def add_tag(self, request, pk=None):
+        image = self.get_object()
+        
+        can_tag = (
+            request.user.profile.role in ['PHOTOGRAPHER', 'COORDINATOR', 'ADMIN'] or
+            image.uploaded_by == request.user
+        )
+        
+        if not can_tag:
+            return Response(
+                {'error': 'Only photographers/admins/owners can tag images'},
+                status=status.HTTP_403_FORBIDDEN
+            )
+        
+        tag_name = request.data.get('tag_name', '').strip().lower()
+        
+        if not tag_name:
+            return Response(
+                {'error': 'Tag name is required'},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+        
+        tag, created = Tag.objects.get_or_create(name=tag_name)
+        
+        image_tag, tag_created = ImageTag.objects.get_or_create(
+            image=image,
+            tag=tag,
+            defaults={'added_by': request.user}
+        )
+        
+        if not tag_created:
+            return Response(
+                {'message': 'Tag already exists on this image'},
+                status=status.HTTP_200_OK
+            )
+        
+        serializer = self.get_serializer(image)
+        return Response(serializer.data, status=status.HTTP_201_CREATED)
+    
+    @action(detail=True, methods=['delete'], permission_classes=[IsAuthenticated])
+    def remove_tag(self, request, pk=None):
+        image = self.get_object()
+        tag_id = request.query_params.get('tag_id')
+        
+        if not tag_id:
+            return Response(
+                {'error': 'tag_id is required'},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+        
+        can_remove = (
+            request.user.profile.role in ['PHOTOGRAPHER', 'COORDINATOR', 'ADMIN'] or
+            image.uploaded_by == request.user
+        )
+        
+        if not can_remove:
+            return Response(
+                {'error': 'Only photographers/admins/owners can remove tags'},
+                status=status.HTTP_403_FORBIDDEN
+            )
+        
+        try:
+            image_tag = ImageTag.objects.get(image=image, tag_id=tag_id)
+            image_tag.delete()
+            
+            serializer = self.get_serializer(image)
+            return Response(serializer.data, status=status.HTTP_200_OK)
+        except ImageTag.DoesNotExist:
+            return Response(
+                {'error': 'Tag not found on this image'},
+                status=status.HTTP_404_NOT_FOUND
+            )

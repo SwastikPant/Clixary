@@ -40,4 +40,9 @@ export const imagesService = {
     const response = await api.post(`/images/${id}/favorite/`);
     return response.data;
   },
+  
+  delete: async (id: number) => {
+    const response = await api.delete(`/images/${id}/`);
+    return response.data;
+  },
 };

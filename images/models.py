@@ -26,7 +26,7 @@ class Image(models.Model):
 	title = models.CharField(max_length=100, null=True, blank=True)
 	description = models.TextField(null=True, blank=True)
 	exif = models.JSONField(null=True, blank=True)
-	tags = models.ManyToManyField("tags.Tag", blank=True)
+	tags = models.ManyToManyField("tags.Tag", through='tags.ImageTag', related_name='images', blank=True)
 	privacy = models.CharField(max_length=10, choices=PRIV_CHOICES, default="PRIVATE")
 	view_count = models.IntegerField(default=0)
 	like_count = models.IntegerField(default=0)

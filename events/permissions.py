@@ -23,5 +23,6 @@ class CanModifyEvent(permissions.BasePermission):
             return True
         is_creator = obj.created_by == request.user
         is_admin = request.user.profile.role == 'ADMIN'
+        is_coordinator = request.user.profile.role == 'COORDINATOR'
         
-        return is_creator or is_admin
+        return is_creator or is_admin or is_coordinator

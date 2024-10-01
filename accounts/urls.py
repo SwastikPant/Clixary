@@ -6,4 +6,5 @@ urlpatterns = [
     path('verify-otp/', views.verify_otp, name='verify_otp'),
     path('omniport-login/', views.omniport_login, name='omniport_login'),
     path('me/', views.me, name='me'),
+    path('profile/', views.profile, name='profile'),
 ]

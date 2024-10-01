@@ -29,6 +29,10 @@ const EventDetailPage: React.FC = () => {
   const [displayedImages, setDisplayedImages] = useState<Image[]>([]);
   const [loadingImages, setLoadingImages] = useState(false);
 
+  const { user } = useAppSelector((state) => state.auth);
+
+  const canEdit = user?.role === 'COORDINATOR' || user?.role === 'ADMIN';
+
   useEffect(() => {
     if (id) {
       dispatch(fetchEventById(parseInt(id)));
@@ -93,13 +97,23 @@ const EventDetailPage: React.FC = () => {
           Back to Events
         </Button>
         
-        <Button
-          variant="contained"
-          startIcon={<CloudUpload />}
-          onClick={() => navigate(`/events/${id}/upload`)}
-        >
-          Upload Photos
-        </Button>
+        <Box display="flex" gap={2}>
+          {canEdit && (
+            <Button
+              variant="outlined"
+              onClick={() => navigate(`/events/${id}/edit`)}
+            >
+              Edit Event
+            </Button>
+          )}
+          <Button
+            variant="contained"
+            startIcon={<CloudUpload />}
+            onClick={() => navigate(`/events/${id}/upload`)}
+          >
+            Upload Photos
+          </Button>
+        </Box>
       </Box>
 
       <Box mb={4}>

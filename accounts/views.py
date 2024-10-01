@@ -92,3 +92,37 @@ def me(request):
         'role': request.user.profile.role,
         'is_staff': request.user.is_staff,
     })
+
+@api_view(['GET', 'PATCH'])
+@permission_classes([IsAuthenticated])
+def profile(request):
+    profile = request.user.profile
+    
+    if request.method == 'GET':
+        return Response({
+            'id': request.user.id,
+            'username': request.user.username,
+            'email': request.user.email,
+            'role': profile.role,
+            'bio': profile.bio,
+            'batch': profile.batch,
+            'department': profile.department,
+            'email_verified': profile.email_verified,
+        })
+    
+    elif request.method == 'PATCH':
+        if 'bio' in request.data:
+            profile.bio = request.data['bio']
+        if 'batch' in request.data:
+            profile.batch = request.data['batch']
+        if 'department' in request.data:
+            profile.department = request.data['department']
+        
+        profile.save()
+        
+        return Response({
+            'message': 'Profile updated successfully',
+            'bio': profile.bio,
+            'batch': profile.batch,
+            'department': profile.department,
+        })

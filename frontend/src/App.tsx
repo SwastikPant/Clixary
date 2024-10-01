@@ -19,6 +19,8 @@ import MyFavoritesPage from './pages/MyFavoritesPage';
 import MyUploadsPage from './pages/MyUploadsPage';
 import BrowseImagesPage from './pages/BrowseImagesPage';
 import CreateEventPage from './pages/CreateEventPage';
+import EditEventPage from './pages/EditEventPage';
+import ProfileSettingsPage from './pages/ProfileSettingsPage';
 
 const theme = createTheme({
   palette: {
@@ -65,6 +67,10 @@ const App: React.FC = () => {
               element={isAuthenticated ? <ImageUploadPage /> : <Navigate to="/login" />}
             />
             <Route
+              path="/events/:id/edit"
+              element={isAuthenticated ? <EditEventPage /> : <Navigate to="/login" />}
+            />
+            <Route
               path="/images/:id"
               element={isAuthenticated ? <ImageDetailPage /> : <Navigate to="/login" />}
             />
@@ -83,6 +89,10 @@ const App: React.FC = () => {
             <Route
               path="/events/create"
               element={isAuthenticated ? <CreateEventPage /> : <Navigate to="/login" />}
+            />
+            <Route
+              path="/profile"
+              element={isAuthenticated ? <ProfileSettingsPage /> : <Navigate to="/login" />}
             />
           </Route>
 
