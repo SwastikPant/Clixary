@@ -10,9 +10,9 @@ PRIV_CHOICES = [
 class Image(models.Model):
 	event = models.ForeignKey("events.Event", on_delete=models.CASCADE)
 	batch = models.IntegerField(null=True, blank=True)
-	original_image = models.ImageField(upload_to="media/images/original/", null=False, blank=False)
-	watermarked_image = models.ImageField(upload_to="media/images/watermarked/", null=True, blank=True)
-	thumbnail =  models.ImageField(upload_to="media/images/thumbnails/", null=True, blank=True)
+	original_image = models.ImageField(upload_to="images/original/", null=False, blank=False)
+	watermarked_image = models.ImageField(upload_to="images/watermarked/", null=True, blank=True)
+	thumbnail =  models.ImageField(upload_to="images/thumbnails/", null=True, blank=True)
 	capture_time = models.DateTimeField(null=True, blank=True)
 	camera_model = models.CharField(max_length=100, null=True, blank=True)
 	aperture = models.CharField(max_length=100, null=True, blank=True)
