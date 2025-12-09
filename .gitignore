@@ -1,0 +1,10 @@
+__pycache__/
+*.pyc
+
+media/
+
+env/
+venv/
+
+*.sublime-workspace
+*.sublime-project
