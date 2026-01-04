@@ -2,7 +2,6 @@ import api from './api';
 import { Image } from '../types';
 
 export const imagesService = {
-
   getAll: async (params?: any): Promise<any> => {
     const response = await api.get('/images/', { params });
     return Array.isArray(response.data) ? response.data : response.data.results;
@@ -11,6 +10,16 @@ export const imagesService = {
   getById: async (id: number) => {
     const response = await api.get(`/images/${id}/`);
     return response.data;
+  },
+
+  getMyFavorites: async (): Promise<any> => {
+    const response = await api.get('/images/my_favorites/');
+    return Array.isArray(response.data) ? response.data : response.data.results;
+  },
+
+  getMyUploads: async (): Promise<any> => {
+    const response = await api.get('/images/my_uploads/');
+    return Array.isArray(response.data) ? response.data : response.data.results;
   },
 
   upload: async (formData: FormData) => {

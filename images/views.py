@@ -1,5 +1,5 @@
 from django.shortcuts import render
-from django.db.models import F
+from django.db.models import F, Q
 from rest_framework import viewsets, permissions, status, filters
 from rest_framework.decorators import action
 from rest_framework.response import Response
@@ -24,6 +24,19 @@ class ImageViewSet(viewsets.ModelViewSet):
     ordering_fields = ['uploaded_at', 'like_count', 'view_count'] 
     ordering = ['uploaded_at']
 
+
+    def get_queryset(self):
+        queryset = super().get_queryset()
+        user = self.request.user
+        
+        if user.is_authenticated:
+            queryset = queryset.filter(
+                Q(privacy='PUBLIC') | Q(uploaded_by=user)
+            )
+        else:
+            queryset = queryset.filter(privacy='PUBLIC')
+        
+        return queryset
 
     def get_permissions(self):
         if self.action in ['create', 'bulk_upload']:

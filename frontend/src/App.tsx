@@ -15,6 +15,10 @@ import EventsListPage from './pages/EventsListPage';
 import EventDetailPage from './pages/EventDetailPage';
 import ImageUploadPage from './pages/ImageUploadPage';
 import ImageDetailPage from './pages/ImageDetailPage';
+import MyFavoritesPage from './pages/MyFavoritesPage';
+import MyUploadsPage from './pages/MyUploadsPage';
+import BrowseImagesPage from './pages/BrowseImagesPage';
+import CreateEventPage from './pages/CreateEventPage';
 
 const theme = createTheme({
   palette: {
@@ -63,6 +67,22 @@ const App: React.FC = () => {
             <Route
               path="/images/:id"
               element={isAuthenticated ? <ImageDetailPage /> : <Navigate to="/login" />}
+            />
+            <Route
+              path="/favorites"
+              element={isAuthenticated ? <MyFavoritesPage /> : <Navigate to="/login" />}
+            />
+            <Route
+              path="/my-uploads"
+              element={isAuthenticated ? <MyUploadsPage /> : <Navigate to="/login" />}
+            />
+            <Route
+              path="/browse"
+              element={isAuthenticated ? <BrowseImagesPage /> : <Navigate to="/login" />}
+            />
+            <Route
+              path="/events/create"
+              element={isAuthenticated ? <CreateEventPage /> : <Navigate to="/login" />}
             />
           </Route>
 

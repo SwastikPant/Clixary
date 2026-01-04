@@ -1,4 +1,4 @@
-import React, { useEffect } from 'react';
+import React, { useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import {
   Container,
@@ -15,12 +15,19 @@ import {
 import { ArrowBack, CalendarToday, CameraAlt, CloudUpload } from '@mui/icons-material';
 import { useAppDispatch, useAppSelector } from '../store/hooks';
 import { fetchEventById, clearCurrentEvent } from '../store/eventsSlice';
+import SearchFilter, { SearchFilters } from '../components/SearchFilter';
+import { imagesService } from '../services/images';
+import { Image } from '../types';
 
 const EventDetailPage: React.FC = () => {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
   const dispatch = useAppDispatch();
   const { currentEvent, loading, error } = useAppSelector((state) => state.events);
+  
+
+  const [displayedImages, setDisplayedImages] = useState<Image[]>([]);
+  const [loadingImages, setLoadingImages] = useState(false);
 
   useEffect(() => {
     if (id) {
@@ -31,6 +38,31 @@ const EventDetailPage: React.FC = () => {
     };
   }, [id, dispatch]);
 
+
+  useEffect(() => {
+    if (currentEvent?.images) {
+      setDisplayedImages(currentEvent.images);
+    }
+  }, [currentEvent]);
+
+  const handleSearch = async (filters: SearchFilters) => {
+    if (!id) return;
+    
+    setLoadingImages(true);
+    try {
+      const params = {
+        ...filters,
+        event: id,
+      };
+      const data = await imagesService.getAll(params);
+      setDisplayedImages(data);
+    } catch (err) {
+      console.error('Failed to filter images:', err);
+    } finally {
+      setLoadingImages(false);
+    }
+  };
+
   if (loading) {
     return (
       <Box display="flex" justifyContent="center" alignItems="center" minHeight="80vh">
@@ -39,10 +71,10 @@ const EventDetailPage: React.FC = () => {
     );
   }
 
-  if (error) {
+  if (error || !currentEvent) {
     return (
       <Container maxWidth="lg" sx={{ mt: 4 }}>
-        <Alert severity="error">{error}</Alert>
+        <Alert severity="error">{error || 'Event not found'}</Alert>
         <Button onClick={() => navigate('/events')} sx={{ mt: 2 }}>
           Back to Events
         </Button>
@@ -50,29 +82,26 @@ const EventDetailPage: React.FC = () => {
     );
   }
 
-  if (!currentEvent) {
-    return null;
-  }
-
   return (
     <Container maxWidth="lg" sx={{ mt: 4, mb: 4 }}>
-      {/* Header */}
-      <Button
-        startIcon={<ArrowBack />}
-        onClick={() => navigate('/events')}
-        sx={{ mb: 2 }}
-      >
-        Back to Events
-      </Button>
-      <Button
-        variant="contained"
-        startIcon={<CloudUpload />}
-        onClick={() => navigate(`/events/${id}/upload`)}
-      >
-        Upload Photos
-      </Button>
 
-      {/* Event Info */}
+      <Box display="flex" justifyContent="space-between" alignItems="center" mb={2}>
+        <Button
+          startIcon={<ArrowBack />}
+          onClick={() => navigate('/events')}
+        >
+          Back to Events
+        </Button>
+        
+        <Button
+          variant="contained"
+          startIcon={<CloudUpload />}
+          onClick={() => navigate(`/events/${id}/upload`)}
+        >
+          Upload Photos
+        </Button>
+      </Box>
+
       <Box mb={4}>
         <Typography variant="h3" component="h1" gutterBottom>
           {currentEvent.name}
@@ -94,10 +123,16 @@ const EventDetailPage: React.FC = () => {
         )}
       </Box>
 
-      {/* Photo Gallery */}
-      {currentEvent.images && currentEvent.images.length > 0 ? (
+      <SearchFilter onSearch={handleSearch} showEventFilter={false} />
+
+
+      {loadingImages ? (
+        <Box display="flex" justifyContent="center" py={4}>
+          <CircularProgress />
+        </Box>
+      ) : displayedImages && displayedImages.length > 0 ? (
         <Grid container spacing={2}>
-          {currentEvent.images.map((image) => (
+          {displayedImages.map((image) => (
             <Grid size={{ xs: 12, sm: 6, md: 4, lg: 3 }} key={image.id}>
               <Card
                 sx={{
@@ -121,7 +156,7 @@ const EventDetailPage: React.FC = () => {
           ))}
         </Grid>
       ) : (
-        <Alert severity="info">No photos in this event yet.</Alert>
+        <Alert severity="info">No photos match your filters.</Alert>
       )}
     </Container>
   );

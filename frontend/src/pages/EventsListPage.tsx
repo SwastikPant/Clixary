@@ -17,10 +17,14 @@ import { CalendarToday, Visibility } from '@mui/icons-material';
 import { useAppDispatch, useAppSelector } from '../store/hooks';
 import { fetchEvents } from '../store/eventsSlice';
 
+
+
 const EventsListPage: React.FC = () => {
   const navigate = useNavigate();
   const dispatch = useAppDispatch();
   const { events, loading, error } = useAppSelector((state) => state.events);
+  const { user } = useAppSelector((state) => state.auth);
+  const canCreateEvent = user?.role === 'COORDINATOR' || user?.role === 'ADMIN';
 
   useEffect(() => {
     dispatch(fetchEvents());
@@ -48,12 +52,14 @@ const EventsListPage: React.FC = () => {
         <Typography variant="h4" component="h1">
           Events
         </Typography>
-        <Button
-          variant="contained"
-          onClick={() => navigate('/events/create')}
-        >
-          Create Event
-        </Button>
+        {canCreateEvent && (
+          <Button
+            variant="contained"
+            onClick={() => navigate('/events/create')}
+          >
+            Create Event
+          </Button>
+        )}
       </Box>
 
       {events.length === 0 ? (
