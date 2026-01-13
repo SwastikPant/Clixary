@@ -283,6 +283,8 @@ const ImageDetailPage: React.FC = () => {
               tags={image.tags || []}
               canEdit={!!isOwner}
               onTagsChange={handleTagsChange}
+              userTags={(image as any).user_tags || []}
+              onUserTagsChange={handleTagsChange}
             />
 
             <Divider sx={{ my: 2 }} />

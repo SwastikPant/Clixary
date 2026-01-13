@@ -42,6 +42,15 @@ export interface Tag {
   image_count?: number;
 }
 
+export interface UserTag {
+  id: number;
+  user_id: number;
+  username: string;
+  added_by?: string;
+  added_at?: string;
+}
+
+
 export interface Image {
   id: number;
   event: number;
@@ -62,6 +71,7 @@ export interface Image {
   privacy: 'PUBLIC' | 'PRIVATE';
   uploaded_at: string;
   tags: Tag[];
+  user_tags?: User[];
 }
 
 export interface Comment {

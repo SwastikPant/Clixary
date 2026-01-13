@@ -8,6 +8,7 @@ class ImageSerializer(serializers.ModelSerializer):
     user_favourited = serializers.SerializerMethodField()
     uploaded_by = serializers.StringRelatedField(read_only=True)
     tags = TagSerializer(many=True, read_only=True)
+    user_tags = serializers.SerializerMethodField()
 
     class Meta:
         model = Image
@@ -19,6 +20,7 @@ class ImageSerializer(serializers.ModelSerializer):
             'view_count', 'like_count', 'download_count',
             'privacy', 'exif', 'uploaded_at',
             'user_liked', 'user_favourited', 'tags',
+            'user_tags',
         ]
         read_only_fields = [
             "view_count",
@@ -39,6 +41,17 @@ class ImageSerializer(serializers.ModelSerializer):
                 reaction_type='LIKE'
             ).exists()
         return False
+
+    def get_user_tags(self, obj):
+        tags = []
+        for ut in getattr(obj, 'image_user_tags').all():
+            tags.append({
+                'id': ut.user.id,
+                'username': ut.user.username,
+                'added_by': str(ut.added_by),
+                'added_at': ut.added_at,
+            })
+        return tags
 
     def get_user_favourited(self, obj):
         request = self.context.get('request')

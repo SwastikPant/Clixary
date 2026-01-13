@@ -23,3 +23,17 @@ class ImageTag(models.Model):
     
     def __str__(self):
         return f"{self.tag.name} on Image {self.image.id}"
+
+
+class ImageUserTag(models.Model):
+    image = models.ForeignKey('images.Image', on_delete=models.CASCADE, related_name='image_user_tags')
+    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='tagged_in_images')
+    added_by = models.ForeignKey(User, on_delete=models.CASCADE, related_name='added_user_tags')
+    added_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        unique_together = ('image', 'user')
+        ordering = ['added_at']
+
+    def __str__(self):
+        return f"{self.user.username} tagged on Image {self.image.id}"

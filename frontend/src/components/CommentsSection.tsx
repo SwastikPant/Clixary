@@ -15,6 +15,8 @@ import { MoreVert, Reply } from '@mui/icons-material';
 import { commentsService } from '../services/comments';
 import { Comment } from '../types';
 import { useAppSelector } from '../store/hooks';
+import { usersService } from '../services/users';
+import { User } from '../types';
 
 interface CommentsSectionProps {
   imageId: number;
@@ -155,6 +157,9 @@ const CommentsSection: React.FC<CommentsSectionProps> = ({ imageId }) => {
   const { user } = useAppSelector((state) => state.auth);
   const [comments, setComments] = useState<Comment[]>([]);
   const [newComment, setNewComment] = useState('');
+  const [mentionQuery, setMentionQuery] = useState('');
+  const [mentionOptions, setMentionOptions] = useState<User[]>([]);
+  const [showMentionOptions, setShowMentionOptions] = useState(false);
   const [replyingTo, setReplyingTo] = useState<number | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -188,6 +193,40 @@ const CommentsSection: React.FC<CommentsSectionProps> = ({ imageId }) => {
     } finally {
       setLoading(false);
     }
+  };
+
+  const handleNewCommentChange = async (value: string) => {
+    setNewComment(value);
+
+    const match = value.match(/@([a-zA-Z0-9_]{1,})$/);
+    if (match) {
+      const q = match[1];
+      setMentionQuery(q);
+      if (q.length >= 1) {
+        try {
+          const users = await usersService.search(q);
+          setMentionOptions(users);
+          setShowMentionOptions(true);
+        } catch (e) {
+          setMentionOptions([]);
+          setShowMentionOptions(false);
+        }
+      } else {
+        setMentionOptions([]);
+        setShowMentionOptions(false);
+      }
+    } else {
+      setMentionOptions([]);
+      setShowMentionOptions(false);
+      setMentionQuery('');
+    }
+  };
+
+  const insertMention = (username: string) => {
+    const newText = newComment.replace(/@([a-zA-Z0-9_]{1,})$/, `@${username} `);
+    setNewComment(newText);
+    setShowMentionOptions(false);
+    setMentionOptions([]);
   };
 
   const handleReply = (commentId: number) => {
@@ -265,9 +304,25 @@ const CommentsSection: React.FC<CommentsSectionProps> = ({ imageId }) => {
           rows={3}
           placeholder="Write a comment..."
           value={newComment}
-          onChange={(e) => setNewComment(e.target.value)}
+          onChange={(e) => handleNewCommentChange(e.target.value)}
           variant="outlined"
         />
+
+        {showMentionOptions && mentionOptions.length > 0 && (
+          <Box sx={{ mt: 1 }}>
+            <Paper elevation={3} sx={{ maxHeight: 200, overflow: 'auto' }}>
+              {mentionOptions.map((u) => (
+                <Box
+                  key={u.id}
+                  sx={{ p: 1, cursor: 'pointer', '&:hover': { background: '#f5f5f5' } }}
+                  onClick={() => insertMention(u.username)}
+                >
+                  @{u.username}
+                </Box>
+              ))}
+            </Paper>
+          </Box>
+        )}
         <Box mt={2} display="flex" justifyContent="flex-end">
           <Button
             variant="contained"

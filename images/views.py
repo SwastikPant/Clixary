@@ -12,8 +12,9 @@ from .models import Image
 from .permissions import CanUploadImage, CanModifyImage
 from .filters import ImageFilter
 from activities.models import Reaction
-from tags.models import Tag, ImageTag
+from tags.models import Tag, ImageTag, ImageUserTag
 from tags.serializers import TagSerializer
+from django.contrib.auth.models import User
 
 
 class ImageViewSet(viewsets.ModelViewSet):
@@ -297,3 +298,67 @@ class ImageViewSet(viewsets.ModelViewSet):
                 {'error': 'Tag not found on this image'},
                 status=status.HTTP_404_NOT_FOUND
             )
+
+    @action(detail=True, methods=['post'], permission_classes=[IsAuthenticated])
+    def add_user_tag(self, request, pk=None):
+        image = self.get_object()
+
+        can_tag = (
+            request.user.profile.role in ['PHOTOGRAPHER', 'COORDINATOR', 'ADMIN'] or
+            image.uploaded_by == request.user
+        )
+
+        if not can_tag:
+            return Response(
+                {'error': 'Only photographers/admins/owners can tag images'},
+                status=status.HTTP_403_FORBIDDEN
+            )
+
+        user_id = request.data.get('user_id')
+        if not user_id:
+            return Response({'error': 'user_id is required'}, status=status.HTTP_400_BAD_REQUEST)
+
+        try:
+            target_user = User.objects.get(pk=user_id)
+        except User.DoesNotExist:
+            return Response({'error': 'User not found'}, status=status.HTTP_404_NOT_FOUND)
+
+        image_user_tag, created = ImageUserTag.objects.get_or_create(
+            image=image,
+            user=target_user,
+            defaults={'added_by': request.user}
+        )
+
+        if not created:
+            return Response({'message': 'User already tagged on this image'}, status=status.HTTP_200_OK)
+
+        serializer = self.get_serializer(image)
+        return Response(serializer.data, status=status.HTTP_201_CREATED)
+
+    @action(detail=True, methods=['delete'], permission_classes=[IsAuthenticated])
+    def remove_user_tag(self, request, pk=None):
+        image = self.get_object()
+        user_id = request.query_params.get('user_id')
+
+        if not user_id:
+            return Response({'error': 'user_id is required'}, status=status.HTTP_400_BAD_REQUEST)
+
+        can_remove = (
+            request.user.profile.role in ['PHOTOGRAPHER', 'COORDINATOR', 'ADMIN'] or
+            image.uploaded_by == request.user
+        )
+
+        if not can_remove:
+            return Response(
+                {'error': 'Only photographers/admins/owners can remove user tags'},
+                status=status.HTTP_403_FORBIDDEN
+            )
+
+        try:
+            image_user_tag = ImageUserTag.objects.get(image=image, user_id=user_id)
+            image_user_tag.delete()
+
+            serializer = self.get_serializer(image)
+            return Response(serializer.data, status=status.HTTP_200_OK)
+        except ImageUserTag.DoesNotExist:
+            return Response({'error': 'User not tagged on this image'}, status=status.HTTP_404_NOT_FOUND)

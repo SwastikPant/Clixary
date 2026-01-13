@@ -3,6 +3,21 @@ from rest_framework.decorators import api_view, permission_classes
 from rest_framework.permissions import AllowAny, IsAuthenticated
 from rest_framework.response import Response
 from .serializers import RegisterSerializer, VerifyOTPSerializer, OmniportOAuthSerializer
+from django.contrib.auth.models import User
+from rest_framework import status
+
+
+@api_view(['GET'])
+@permission_classes([IsAuthenticated])
+def users_search(request):
+    q = request.query_params.get('q', '')
+    if q:
+        users = User.objects.filter(username__icontains=q)[:20]
+    else:
+        users = User.objects.all()[:20]
+
+    data = [{'id': u.id, 'username': u.username, 'email': u.email} for u in users]
+    return Response(data)
 
 @api_view(['POST'])
 @permission_classes([AllowAny])

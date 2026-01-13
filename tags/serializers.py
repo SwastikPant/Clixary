@@ -1,5 +1,17 @@
 from rest_framework import serializers
 from .models import Tag, ImageTag
+from .models import ImageUserTag
+from django.contrib.auth.models import User
+
+
+class ImageUserTagSerializer(serializers.ModelSerializer):
+    user_id = serializers.IntegerField(source='user.id', read_only=True)
+    username = serializers.CharField(source='user.username', read_only=True)
+    added_by = serializers.StringRelatedField(read_only=True)
+
+    class Meta:
+        model = ImageUserTag
+        fields = ['id', 'user_id', 'username', 'added_by', 'added_at']
 
 class TagSerializer(serializers.ModelSerializer):
     image_count = serializers.SerializerMethodField()
