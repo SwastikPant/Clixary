@@ -62,8 +62,20 @@ const LoginPage: React.FC = () => {
         }}
       >
         <Paper elevation={3} sx={{ p: 4, width: '100%' }}>
-          <Typography component="h1" variant="h4" align="center" gutterBottom>
-            Event Photo Platform
+          <Typography
+            component="h1"
+            variant="h4"
+            align="center"
+            gutterBottom
+            sx={{
+              fontWeight: 800,
+              letterSpacing: '0.6px',
+              background: 'linear-gradient(90deg, var(--accent), var(--accent-2))',
+              WebkitBackgroundClip: 'text',
+              WebkitTextFillColor: 'transparent'
+            }}
+          >
+            Clixary
           </Typography>
           <Typography component="h2" variant="h6" align="center" color="text.secondary" gutterBottom>
             Login

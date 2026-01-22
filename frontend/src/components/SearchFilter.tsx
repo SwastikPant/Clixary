@@ -21,7 +21,6 @@ interface SearchFilterProps {
 
 export interface SearchFilters {
   search?: string;
-  event?: string;
   privacy?: string;
   ordering?: string;
   uploaded_after?: string;
@@ -33,7 +32,6 @@ const SearchFilter: React.FC<SearchFilterProps> = ({ onSearch, showEventFilter =
   const [showFilters, setShowFilters] = useState(false);
   const [filters, setFilters] = useState<SearchFilters>({
     search: '',
-    event: '',
     privacy: '',
     ordering: '-uploaded_at',
     uploaded_after: '',
@@ -58,7 +56,6 @@ const SearchFilter: React.FC<SearchFilterProps> = ({ onSearch, showEventFilter =
   const handleClear = () => {
     const clearedFilters: SearchFilters = {
       search: '',
-      event: '',
       privacy: '',
       ordering: '-uploaded_at',
       uploaded_after: '',
@@ -75,7 +72,7 @@ const SearchFilter: React.FC<SearchFilterProps> = ({ onSearch, showEventFilter =
       <Box display="flex" gap={2} alignItems="center">
         <TextField
           fullWidth
-          placeholder="Search by photographer or event name..."
+          placeholder="Filter images"
           value={filters.search}
           onChange={(e) => handleChange('search', e.target.value)}
           onKeyPress={(e) => e.key === 'Enter' && handleSearch()}
@@ -100,19 +97,6 @@ const SearchFilter: React.FC<SearchFilterProps> = ({ onSearch, showEventFilter =
 
       <Collapse in={showFilters}>
         <Grid container spacing={2} sx={{ mt: 1 }}>
-          {/* Event Filter */}
-          {showEventFilter && (
-            <Grid size={{ xs: 12, sm: 6, md: 3 }}>
-              <TextField
-                fullWidth
-                label="Event ID"
-                type="number"
-                value={filters.event}
-                onChange={(e) => handleChange('event', e.target.value)}
-                size="small"
-              />
-            </Grid>
-          )}
 
           <Grid size={{ xs: 12, sm: 6, md: 3 }}>
             <FormControl fullWidth size="small">

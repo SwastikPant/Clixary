@@ -60,7 +60,22 @@ const RegisterPage: React.FC = () => {
     <Container maxWidth="sm">
       <Box sx={{ marginTop: 8 }}>
         <Paper elevation={3} sx={{ p: 4 }}>
-          <Typography component="h1" variant="h4" align="center" gutterBottom>
+          <Typography
+            component="h1"
+            variant="h4"
+            align="center"
+            gutterBottom
+            sx={{
+              fontWeight: 800,
+              letterSpacing: '0.6px',
+              background: 'linear-gradient(90deg, var(--accent), var(--accent-2))',
+              WebkitBackgroundClip: 'text',
+              WebkitTextFillColor: 'transparent'
+            }}
+          >
+            Clixary
+          </Typography>
+          <Typography component="h2" variant="h6" align="center" color="text.secondary" gutterBottom>
             Register
           </Typography>
 
@@ -72,7 +87,7 @@ const RegisterPage: React.FC = () => {
 
           {success && (
             <Alert severity="success" sx={{ mt: 2 }}>
-              Registration successful! Check your email (console) for OTP. Redirecting...
+              Registration successful! Check your email for OTP. Redirecting...
             </Alert>
           )}
 

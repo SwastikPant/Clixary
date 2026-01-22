@@ -70,14 +70,17 @@ const ImageDetailPage: React.FC = () => {
 
   useEffect(() => {
     if (id) {
-      loadImage(parseInt(id));
+      // Only count the view on the initial load (when reloadTrigger is 0).
+      const countView = reloadTrigger === 0;
+      loadImage(parseInt(id), countView);
     }
   }, [id, reloadTrigger]);
 
-  const loadImage = async (imageId: number) => {
+  const loadImage = async (imageId: number, countView: boolean = false) => {
     try {
       setLoading(true);
-      const data = await imagesService.getById(imageId);
+      // Request image; only increment view count when countView is true
+      const data = await imagesService.getById(imageId, countView);
       setImage(data);
     } catch (err: any) {
       setError('Failed to load image');

@@ -3,10 +3,10 @@ __pycache__/
 
 media/
 
-env/
+.env
+*.env
 venv/
 
-runserver.ps1
 
 *.sublime-workspace
 *.sublime-project

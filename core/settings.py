@@ -10,8 +10,17 @@ MEDIA_ROOT = BASE_DIR/ "media"
 # Quick-start development settings - unsuitable for production
 # See https://docs.djangoproject.com/en/6.0/howto/deployment/checklist/
 
-# SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = '[REDACTED-OLD-SECRET-KEY]'
+
+SECRET_KEY = os.getenv('SECRET_KEY')
+if not SECRET_KEY:
+    try:
+        from django.core.management.utils import get_random_secret_key
+
+        SECRET_KEY = get_random_secret_key()
+    except Exception:
+        import secrets
+
+        SECRET_KEY = secrets.token_urlsafe(50)
 
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
@@ -75,16 +84,32 @@ WSGI_APPLICATION = 'core.wsgi.application'
 # Database
 # https://docs.djangoproject.com/en/6.0/ref/settings/#databases
 
-DATABASES = {
-    'default': {
-        'ENGINE': 'django.db.backends.postgresql',
-        'NAME': 'autumn_db',
-        'USER': 'postgres',
-        'PASSWORD': '[REDACTED-DB-PASSWORD]',
-        'HOST': 'localhost',
-        'PORT': '5432', 
+
+DB_ENGINE = os.getenv('DB_ENGINE', 'django.db.backends.postgresql')
+DB_NAME = os.getenv('DB_NAME')
+DB_USER = os.getenv('DB_USER')
+DB_PASSWORD = os.getenv('DB_PASSWORD')
+DB_HOST = os.getenv('DB_HOST')
+DB_PORT = os.getenv('DB_PORT')
+
+if DB_ENGINE == 'django.db.backends.sqlite3' or not (DB_NAME and DB_USER and DB_HOST):
+    DATABASES = {
+        'default': {
+            'ENGINE': 'django.db.backends.sqlite3',
+            'NAME': BASE_DIR / 'db.sqlite3',
+        }
     }
-}
+else:
+    DATABASES = {
+        'default': {
+            'ENGINE': DB_ENGINE,
+            'NAME': DB_NAME or 'autumn_db',
+            'USER': DB_USER or 'postgres',
+            'PASSWORD': DB_PASSWORD or '',
+            'HOST': DB_HOST or 'localhost',
+            'PORT': DB_PORT or '5432',
+        }
+    }
 
 
 # Password validation
@@ -193,13 +218,14 @@ OMNIPORT_OAUTH_REDIRECT_URI = os.getenv(
 )
 
 
-# Celery Configuration
-CELERY_BROKER_URL = 'redis://localhost:6379/0'
-CELERY_RESULT_BACKEND = 'redis://localhost:6379/0'
-CELERY_ACCEPT_CONTENT = ['json']
-CELERY_TASK_SERIALIZER = 'json'
-CELERY_RESULT_SERIALIZER = 'json'
-CELERY_TIMEZONE = 'UTC'
+CELERY_BROKER_URL = os.getenv('CELERY_BROKER_URL', 'redis://localhost:6379/0')
+CELERY_RESULT_BACKEND = os.getenv('CELERY_RESULT_BACKEND', os.getenv('CELERY_BROKER_URL', 'redis://localhost:6379/0'))
+CELERY_ACCEPT_CONTENT = os.getenv('CELERY_ACCEPT_CONTENT', 'json')
+if isinstance(CELERY_ACCEPT_CONTENT, str):
+    CELERY_ACCEPT_CONTENT = [c.strip() for c in CELERY_ACCEPT_CONTENT.split(',') if c.strip()]
+CELERY_TASK_SERIALIZER = os.getenv('CELERY_TASK_SERIALIZER', 'json')
+CELERY_RESULT_SERIALIZER = os.getenv('CELERY_RESULT_SERIALIZER', 'json')
+CELERY_TIMEZONE = os.getenv('CELERY_TIMEZONE', 'UTC')
 
 CORS_ALLOWED_ORIGINS = [
     "http://localhost:3000",

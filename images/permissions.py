@@ -10,7 +10,7 @@ class CanUploadImage(permissions.BasePermission):
         if not request.user or not request.user.is_authenticated:
             return False
         
-        allowed_roles = ['PHOTOGRAPHER', 'COORDINATOR', 'ADMIN']
+        allowed_roles = ['PHOTOGRAPHER', 'ADMIN']
         user_role = request.user.profile.role
         
         return user_role in allowed_roles
@@ -26,11 +26,5 @@ class CanModifyImage(permissions.BasePermission):
         is_owner = obj.uploaded_by == request.user
         is_admin = request.user.profile.role == 'ADMIN'
         
-        print(f" Image permission check:")
-        print(f"   User: {request.user.username}")
-        print(f"   Image owner: {obj.uploaded_by.username}")
-        print(f"   Is owner: {is_owner}")
-        print(f"   Is admin: {is_admin}")
-        print(f"   Allowed: {is_owner or is_admin}")
 
         return is_owner or is_admin

@@ -27,6 +27,9 @@ class RegisterSerializer(serializers.ModelSerializer):
 
         try:
             user_by_email = User.objects.get(email=email)
+            from .models import Profile
+            Profile.objects.get_or_create(user=user_by_email)
+
             if user_by_email.profile.email_verified:
                 raise serializers.ValidationError('Email already registered')
             existing_user = user_by_email
@@ -37,6 +40,9 @@ class RegisterSerializer(serializers.ModelSerializer):
         if existing_user is None:
             try:
                 user_by_username = User.objects.get(username=username)
+                from .models import Profile
+                Profile.objects.get_or_create(user=user_by_username)
+
                 if user_by_username.profile.email_verified:
                     raise serializers.ValidationError('Username already taken')
                 existing_user = user_by_username

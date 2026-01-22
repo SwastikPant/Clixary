@@ -30,10 +30,18 @@ const Navbar: React.FC = () => {
         <Typography
           variant="h6"
           component="div"
-          sx={{ flexGrow: 1, cursor: 'pointer' }}
+          sx={{
+            flexGrow: 1,
+            cursor: 'pointer',
+            fontWeight: 800,
+            letterSpacing: '0.6px',
+            background: 'linear-gradient(90deg, var(--accent), var(--accent-2))',
+            WebkitBackgroundClip: 'text',
+            WebkitTextFillColor: 'transparent'
+          }}
           onClick={() => navigate('/events')}
         >
-           Event Photo Platform
+          Clixary
         </Typography>
 
         <Box display="flex" alignItems="center" gap={2}>

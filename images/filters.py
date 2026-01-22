@@ -31,13 +31,11 @@ class ImageFilter(django_filters.FilterSet):
         fields = ['event', 'photographer', 'privacy']
 
     def filter_by_tags(self, queryset, name, value):
-        print(f"🔍 Tag filter called with value: '{value}'")
 
         if not value:
             return queryset
 
         tag_names = [tag.strip().lower() for tag in value.split(',') if tag.strip()]
-        print(f"   Tag names: {tag_names}")
 
         if not tag_names:
             return queryset
@@ -46,6 +44,5 @@ class ImageFilter(django_filters.FilterSet):
             queryset = queryset.filter(tags__name__iexact=tag_name)
 
         result = queryset.distinct()
-        print(f"   Results: {result.count()} images")
 
         return result

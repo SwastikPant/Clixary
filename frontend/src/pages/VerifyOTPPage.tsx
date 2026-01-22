@@ -47,7 +47,7 @@ const VerifyOTPPage: React.FC = () => {
             We sent a 6-digit code to <strong>{email}</strong>
           </Typography>
           <Typography variant="body2" align="center" color="text.secondary" gutterBottom>
-            (Check your Django console for the OTP)
+            (Check your email for the OTP)
           </Typography>
 
           {error && (

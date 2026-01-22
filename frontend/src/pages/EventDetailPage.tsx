@@ -11,6 +11,7 @@ import {
   Card,
   CardMedia,
   Chip,
+  ButtonGroup,
 } from '@mui/material';
 import { ArrowBack, CalendarToday, CameraAlt, CloudUpload } from '@mui/icons-material';
 import { useAppDispatch, useAppSelector } from '../store/hooks';
@@ -28,6 +29,32 @@ const EventDetailPage: React.FC = () => {
 
   const [displayedImages, setDisplayedImages] = useState<Image[]>([]);
   const [loadingImages, setLoadingImages] = useState(false);
+  
+  const [viewMode, setViewMode] = useState<'grid' | 'cards'>(() => {
+    try {
+      if (id) {
+        const raw = sessionStorage.getItem(`event_view_${id}`);
+        if (raw) {
+          const obj = JSON.parse(raw);
+          if (obj && (obj.viewMode === 'grid' || obj.viewMode === 'cards')) return obj.viewMode;
+        }
+      }
+    } catch (e) {}
+    return 'grid';
+  });
+
+  const [cardIndex, setCardIndex] = useState<number>(() => {
+    try {
+      if (id) {
+        const raw = sessionStorage.getItem(`event_view_${id}`);
+        if (raw) {
+          const obj = JSON.parse(raw);
+          if (obj && typeof obj.cardIndex === 'number') return obj.cardIndex;
+        }
+      }
+    } catch (e) {}
+    return 0;
+  });
 
   const { user } = useAppSelector((state) => state.auth);
 
@@ -49,6 +76,29 @@ const EventDetailPage: React.FC = () => {
     }
   }, [currentEvent]);
 
+
+  useEffect(() => {
+    if (!currentEvent || !id) return;
+    const key = `event_view_${id}`;
+    try {
+      const raw = sessionStorage.getItem(key);
+      if (raw) {
+        const obj = JSON.parse(raw);
+        if (obj.viewMode) setViewMode(obj.viewMode);
+        if (typeof obj.cardIndex === 'number') setCardIndex(obj.cardIndex);
+      }
+    } catch (e) {}
+  }, [currentEvent, id]);
+
+
+  useEffect(() => {
+    if (!id) return;
+    const key = `event_view_${id}`;
+    try {
+      sessionStorage.setItem(key, JSON.stringify({ viewMode, cardIndex }));
+    } catch (e) {}
+  }, [viewMode, cardIndex, id]);
+
   const handleSearch = async (filters: SearchFilters) => {
     if (!id) return;
     
@@ -65,6 +115,16 @@ const EventDetailPage: React.FC = () => {
     } finally {
       setLoadingImages(false);
     }
+  };
+
+  const prevCard = () => {
+    if (!displayedImages || displayedImages.length === 0) return;
+    setCardIndex((i) => (i - 1 + displayedImages.length) % displayedImages.length);
+  };
+
+  const nextCard = () => {
+    if (!displayedImages || displayedImages.length === 0) return;
+    setCardIndex((i) => (i + 1) % displayedImages.length);
   };
 
   if (loading) {
@@ -145,30 +205,104 @@ const EventDetailPage: React.FC = () => {
           <CircularProgress />
         </Box>
       ) : displayedImages && displayedImages.length > 0 ? (
-        <Grid container spacing={2}>
-          {displayedImages.map((image) => (
-            <Grid size={{ xs: 12, sm: 6, md: 4, lg: 3 }} key={image.id}>
-              <Card
-                sx={{
-                  cursor: 'pointer',
-                  transition: 'transform 0.2s',
-                  '&:hover': {
-                    transform: 'scale(1.05)',
-                  },
-                }}
-                onClick={() => navigate(`/images/${image.id}`)}
+        <>
+          <Box display="flex" justifyContent="flex-end" mb={2} gap={1}>
+            <ButtonGroup variant="outlined" aria-label="view mode">
+              <Button
+                variant={viewMode === 'grid' ? 'contained' : 'outlined'}
+                onClick={() => setViewMode('grid')}
               >
-                <CardMedia
-                  component="img"
-                  height="250"
-                  image={image.thumbnail || image.original_image}
-                  alt={`Photo ${image.id}`}
-                  sx={{ objectFit: 'cover' }}
-                />
-              </Card>
+                Grid
+              </Button>
+              <Button
+                variant={viewMode === 'cards' ? 'contained' : 'outlined'}
+                onClick={() => setViewMode('cards')}
+              >
+                Cards
+              </Button>
+            </ButtonGroup>
+          </Box>
+
+          {viewMode === 'grid' ? (
+            <Grid container spacing={2}>
+                {displayedImages.map((image) => (
+                <Grid size={{ xs: 12, sm: 6, md: 4, lg: 3 }} key={image.id}>
+                  <Card
+                    sx={{
+                      cursor: 'pointer',
+                      transition: 'transform 0.2s',
+                      '&:hover': { transform: 'scale(1.05)' },
+                    }}
+                    onClick={() => {
+                      // persist view state immediately before navigation so unmount doesn't lose it
+                      if (id) {
+                        try {
+                          sessionStorage.setItem(`event_view_${id}`, JSON.stringify({ viewMode, cardIndex }));
+                        } catch (e) {}
+                      }
+                      navigate(`/images/${image.id}`);
+                    }}
+                  >
+                    <CardMedia
+                      component="img"
+                      height="250"
+                      image={image.thumbnail || image.original_image}
+                      alt={`Photo ${image.id}`}
+                      sx={{ objectFit: 'cover' }}
+                    />
+                  </Card>
+                </Grid>
+              ))}
             </Grid>
-          ))}
-        </Grid>
+          ) : (
+            <Box className="gallery" sx={{ position: 'relative', height: { xs: 340, md: 480 } }}>
+              <ul className="cards">
+                {displayedImages.map((image, idx) => {
+                  const len = displayedImages.length;
+                  const raw = (idx - cardIndex + len) % len;
+                  const half = Math.floor(len / 2);
+                  const signed = raw > half ? raw - len : raw;
+                      const spacingPx = 380; // horizontal spacing between card centers (larger so neighbors are more off-screen)
+                  const absSigned = Math.abs(signed);
+                      const scale = signed === 0 ? 1 : Math.max(0.5, 1 - absSigned * 0.18);
+                      const opacity = signed === 0 ? 1 : Math.max(0.08, 1 - absSigned * 0.35);
+                  const zIndex = 1000 - absSigned;
+                      const rotateY = signed === 0 ? 0 : (signed > 0 ? -12 : 12);
+                      const blurPx = absSigned === 0 ? 0 : Math.min(6, absSigned * 2);
+                      const translateZ = signed === 0 ? 0 : -absSigned * 30;
+                      const transform = `translate(calc(-50% + ${signed * spacingPx}px), -50%) translateZ(${translateZ}px) rotateY(${rotateY}deg) scale(${scale})`;
+                  return (
+                    <li
+                      key={image.id}
+                      onClick={() => {
+                        // persist view state immediately before navigation so the focused card is restored on return
+                        if (id) {
+                          try {
+                            sessionStorage.setItem(`event_view_${id}`, JSON.stringify({ viewMode, cardIndex }));
+                          } catch (e) {}
+                        }
+                        navigate(`/images/${image.id}`);
+                      }}
+                      style={{
+                        backgroundImage: `url(${image.watermarked_image || image.thumbnail || image.original_image})`,
+                        transform,
+                        zIndex,
+                        opacity,
+                        cursor: 'pointer',
+                            filter: `blur(${blurPx}px)`,
+                            boxShadow: signed === 0 ? '0 24px 64px rgba(0,0,0,0.6)' : '0 8px 20px rgba(0,0,0,0.5)',
+                      }}
+                    />
+                  );
+                })}
+              </ul>
+              <div className="actions" style={{ position: 'absolute', bottom: 10, left: '50%', transform: 'translateX(-50%)' }}>
+                <Button variant="outlined" onClick={prevCard}>Prev</Button>
+                <Button variant="outlined" onClick={nextCard}>Next</Button>
+              </div>
+            </Box>
+          )}
+        </>
       ) : (
         <Alert severity="info">No photos match your filters.</Alert>
       )}

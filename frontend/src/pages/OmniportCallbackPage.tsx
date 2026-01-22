@@ -13,10 +13,17 @@ const OmniportCallbackPage: React.FC = () => {
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    const params = new URLSearchParams(location.search);
-    const code = params.get('code');
+  const params = new URLSearchParams(location.search);
+  const code = params.get('code');
+  const errorParam = params.get('error');
+  const errorDescription = params.get('error_description');
 
     const handleOAuth = async () => {
+      if (errorParam) {
+        setError(errorDescription || `Omniport error: ${errorParam}`);
+        return;
+      }
+
       if (!code) {
         setError('Missing authorization code from Omniport.');
         return;
@@ -26,7 +33,12 @@ const OmniportCallbackPage: React.FC = () => {
         // Call backend to exchange code for JWTs and user info
         const response = await authService.loginWithOmniportCode(code);
 
-        // Store tokens
+        // Validate response and store tokens
+        if (!response || !response.access || !response.refresh) {
+          setError('Invalid response from server during Omniport login.');
+          return;
+        }
+
         localStorage.setItem('access_token', response.access);
         localStorage.setItem('refresh_token', response.refresh);
 
@@ -36,11 +48,13 @@ const OmniportCallbackPage: React.FC = () => {
         navigate('/events');
       } catch (err: any) {
         console.error(err);
-        setError(
-          err.response?.data?.detail ||
-            err.response?.data?.non_field_errors?.[0] ||
-            'Omniport login failed. Please try again.'
-        );
+        // Provide a safe fallback for different error shapes
+        const message =
+          err?.response?.data?.detail ||
+          err?.response?.data?.non_field_errors?.[0] ||
+          err?.message ||
+          'Omniport login failed. Please try again.';
+        setError(message);
       }
     };
 

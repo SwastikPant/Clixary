@@ -7,8 +7,10 @@ export const imagesService = {
     return Array.isArray(response.data) ? response.data : response.data.results;
   },
 
-  getById: async (id: number) => {
-    const response = await api.get(`/images/${id}/`);
+  getById: async (id: number, countView: boolean = false) => {
+    const params: any = {};
+    if (countView) params.count_view = '1';
+    const response = await api.get(`/images/${id}/`, { params });
     return response.data;
   },
 

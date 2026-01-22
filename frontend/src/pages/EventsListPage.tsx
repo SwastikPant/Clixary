@@ -1,4 +1,4 @@
-import React, { useEffect } from 'react';
+import React, { useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import {
   Container,
@@ -26,6 +26,8 @@ const EventsListPage: React.FC = () => {
   const { user } = useAppSelector((state) => state.auth);
   const canCreateEvent = user?.role === 'COORDINATOR' || user?.role === 'ADMIN';
 
+  const eventsRef = useRef<HTMLDivElement | null>(null);
+
   useEffect(() => {
     dispatch(fetchEvents());
   }, [dispatch]);
@@ -46,9 +48,20 @@ const EventsListPage: React.FC = () => {
     );
   }
 
+  const scrollToEvents = () => {
+    if (eventsRef.current) eventsRef.current.scrollIntoView({ behavior: 'smooth' });
+  };
+
   return (
     <Container maxWidth="lg" sx={{ mt: 4, mb: 4 }}>
-      <Box display="flex" justifyContent="space-between" alignItems="center" mb={3}>
+      <div className="hero">
+        <h1 className="hero-title">Clixary</h1>
+        <div className="hero-sub">
+          <span className="typed">Image management made simple.</span>
+        </div>
+      </div>
+
+  <Box ref={eventsRef} display="flex" justifyContent="space-between" alignItems="center" mb={3}>
         <Typography variant="h4" component="h1">
           Events
         </Typography>

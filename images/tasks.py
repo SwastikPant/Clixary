@@ -52,7 +52,7 @@ def generate_thumbnail(image_id):
 
 
 @shared_task
-def apply_watermark(image_id, watermark_text="Event Photo Platform"):
+def apply_watermark(image_id, watermark_text="Watermarked image"):
     """Apply watermark to an image"""
     from images.models import Image
     from PIL import ImageDraw, ImageFont
@@ -121,8 +121,6 @@ def apply_watermark(image_id, watermark_text="Event Photo Platform"):
 
 @shared_task
 def auto_tag_image(image_id):
-    print("AUTO TAG TASK STARTED", image_id)
-
     image = Image.objects.get(id=image_id)
     image_path = image.original_image.path
 
